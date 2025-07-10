@@ -1,0 +1,256 @@
+<!DOCTYPE HTML>
+<html>
+   <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+      <title>Sudoku</title>
+   </head>
+   <style>
+      table, th, td {
+      padding: 4px;
+      text-align: center;
+      border: 1px solid black;
+      border-collapse: collapse; 
+      }
+      
+      .centered {
+      text-align: center;
+      }
+
+      .cell-sudoku {
+      height:30px; 
+      width:30px; 
+      padding-top:3px;  
+      }
+      .cell-sudoku-noedit {
+      background-color:lightgrey;
+      color: black;
+      }                
+      .cell-sudoku-edit-zero {
+      color:white; 
+      }
+      .cell-sudoku-edit {
+      background-color:white;
+      }
+      .cell-sudoku-error {
+      background-color:pink;	
+      }
+      .cell-sudoku-error-zero {
+      color:pink;	
+      }
+      .cell-sudoku-hint {
+      background-color:lightgreen;	
+      }    
+     .cell-sudoku-hint-zero {
+      color:lightgreen;	
+      }
+      .tr-sudoku-border-bottom {
+      border-bottom:3px solid #000000;
+      }
+      .td-sudoku-border-right {
+      border-right:3px solid #000000;
+      }
+   </style>
+   <script src="js/evnts.js"></script>
+   <script src="js/sudoku.js"></script>
+   <script src="js/latex-builders.js"></script>
+   <script>
+      //declare variables
+      let board = null;
+      let solution = null;
+      let difficulty = "";
+      let boardName = "main";
+      let showHints = false;
+      let toggleSolution = false;
+      //register event
+      evnts.addCallback(boardName, function(){
+      	board.updateFromCurrentPosition();
+      	refresh();
+      });
+      
+      function latexDocument(b){
+            let doc = new LaTeXDoc();
+            let docEnv = doc.defaultPackages()
+	           .command("pagestyle","empty",true)
+	           .package("sudoku").env()
+	           .begin("document");
+            docEnv.env().begin("center").command("Huge","Sudoku", true);
+            docEnv.env().begin("sudoku").p(b.latexDisplay());
+            docEnv.command("pagebreak");
+            docEnv.env().begin("center").command("Large","Solution", true);
+            docEnv.env().begin("sudoku").p(b.solution().latexDisplay());
+            return encodeURI(doc.build());
+      }
+      	
+      function prefresh(){
+           $("#boardDisplay").html("<h2>Loading puzzle...</h2>"); 
+      }	
+      //define display functions
+      function refresh(){
+      	//refresh
+      	board.hints = showHints;
+      	$("#boardDisplay").html(board.drawBoard());
+      	let bValid = board.isValid();
+       	let bComplete = board.isComplete();
+      	if (bComplete && bValid){
+      		$("#boardComplete").html("<h2 style='color:blue'>Solved!</h2>");
+      	} else {
+      		$("#boardComplete").html(" ");
+      	}      	
+      }
+            
+      function resetLarge(){
+        prefresh();
+      	let triple = new Generator().large();
+      	board = triple.board;
+      	solution = triple.solution;
+        difficulty = triple.difficulty;    
+      	board.name = boardName;
+      	new Stats(board).print();
+      	toggleSolution = false;
+      	updateSolutionButton();
+      	document.getElementById("overleaf-btn").style.display = "block";
+        let latex = latexDocument(board);          	
+      	$("#overleaf").attr("value",latex)
+      	$("#difficultyDisplay").html(difficulty);
+      	
+      	refresh();
+      }
+
+      function resetSmall(){
+        prefresh();
+      	let triple = new Generator().small();
+      	board = triple.board;
+      	solution = triple.solution;
+        difficulty = triple.difficulty; 
+      	board.name = boardName;
+	    new Stats(board).print();
+	    toggleSolution = false;
+      	updateSolutionButton();
+      	document.getElementById("overleaf-btn").style.display = "none";
+      	$("#difficultyDisplay").html(difficulty);
+      	
+      	refresh();
+      }
+
+      function resetBoard() {
+         board.reset();
+         toggleSolution = false;
+         updateSolutionButton();
+         refresh();
+      }
+
+      function showSolution(){
+         toggleSolution = !toggleSolution;
+         if (toggleSolution){     
+            $("#boardDisplay").html(solution.drawBoard());
+         } else {
+            $("#boardDisplay").html(board.drawBoard());
+         }
+         updateSolutionButton();   
+      }
+
+      function updateSolutionButton(){
+           if (toggleSolution){     
+            $("#solution-btn").html("Hide Solution");
+         } else {
+            $("#solution-btn").html("Show Solution");
+         }   
+      }
+      
+      //initialize board, register hint updater 
+      $(document).ready(function(){
+      	
+      	//star regular
+      	resetLarge();
+      	
+      	$(".checkbox").on('click',function(e){
+      		let hints = $('#hint:checked').val();
+      		if (hints == 'yes') {
+      			showHints = true;
+      		} else {
+      			showHints = false;
+      		}
+      		refresh();
+      	});
+      });
+
+   </script>
+   <body>
+      <nav class="navbar navbar-default" style="margin-bottom:0px">
+         <div class="container-fluid">
+            <div class="navbar-header">
+               <a class="navbar-brand" href="..">
+               <img src="imgs/github_badge1.png" style="max-width:100%;max-height:100%" >
+               </a>
+               <p class="navbar-text navbar-right">
+                  <a href=".." class="navbar-link">dmackinnon1.github.io</a>
+               </p>
+            </div>
+         </div>
+      </nav>
+      <br>
+      </div>
+      <div class="container-fluid">
+      <div class='row'>
+      <div class='col-sm-1'></div>
+      <div class='col-sm-10'>
+         <div class="page-header">
+            <h1>SUDOKU</h1>
+            <p> <strong>Sudoku</strong> puzzles require you 
+               complete a grid of numbers by placing digits 
+               in available cells so that each
+               digit appears only once in each row, column, and
+               boxed area. In small Sudoku, the digits 1-4 are used to fill a 4x4 grid,
+               and in regular Sudoku the digits 1-9 are used to fill a 9x9 grid.  
+            <p>
+            <p>On this page, blank white cells are available - your goal is to fill in each blank 
+            with a valid digit. The grey cells are the fixed initial values of
+            the grid and cannot be changed.
+            </p>
+            <p> In the board below, if <strong>hints</strong> are turned on, then all cells that only
+               have one possible value are highlighted in <strong>green</strong>, while cells that have 
+               conflicting 
+               values are highlighted in <strong>red</strong>. Note that the hints are updated based on the
+               fixed values and the values that you have entered, not on the actual solution.                
+            </p>
+            <p>You can download a printable version of the regular size puzzles by clicking on the 
+            <strong>Open in Overleaf</strong> button. This will open the puzzle as a LaTeX file that
+            can be downloaded as a PDF. 
+            </p>
+         </div>
+         <div class="btn-group" role="group">
+            <button type="button" onClick="resetSmall()" class="btn btn-secondary">New Small</button>
+            <button type="button" onClick="resetLarge()"class="btn btn-secondary">New Regular</button>
+         </div>
+         <form>
+            <div class="checkbox">
+               <label><input id="hint" type="checkbox" value="yes" >show hints</label> 
+               <!-- add checked attribte to check by default -->
+            </div>
+         </form>
+         <hr>
+         <div id="boardComplete" style="text-align=center"></div>
+         <h3>
+            <div id="boardDisplay" style="text-align=center"></div>
+         </h3>
+         <h2><div id="difficultyDisplay" style="text-align=center"></div></h2>           
+         <hr>  
+        <div class="btn-group" role="group">
+            <button type="button" onClick="resetBoard()" class="btn btn-secondary">Reset</button>
+            <button type="button" id="solution-btn" onClick="showSolution()"class="btn btn-secondary">Show Solution</button>
+         </div>  
+         <form method="POST" action="https://www.overleaf.com/docs" target="_blank" class="ng-pristine ng-valid">
+         <div class="form-group text-center"><input type="hidden" id='overleaf' name="encoded_snip" value="" autocomplete="off">
+         <input id="overleaf-btn" class="btn-success btn btn-sm" type="submit" value="Open in Overleaf">
+         </div></form>            
+         <h3>
+            <div id="solutionDisplay" style="text-align=center"></div>
+         </h3>
+      </div>
+      <div class='col-sm-1'></div>
+   </body>
+</html>
