@@ -1,5 +1,7 @@
 # Sudoku Game
 
+[🎮 Live Demo](https://anamavahora.github.io/sudoku/)
+
 ## Overview
 
 This is a web-based Sudoku game developed using HTML, CSS, and JavaScript. The game offers an interactive interface where users can play Sudoku puzzles directly in their web browser. It includes real-time input validation and an option to reset the board.
